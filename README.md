@@ -1,38 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## 📊 Modelo de Base de Datos (ERD)
 
-## Getting Started
+Este proyecto utiliza **Mermaid.js** para visualizar el esquema. El núcleo de la gestión de usuarios se basa en la tabla `profiles`, la cual se extiende de la autenticación nativa de Supabase (`auth.users`).
 
-First, run the development server:
+```mermaid
+erDiagram
+    %% Relaciones Lógicas
+    CARRERAS ||--o{ PROFILES : "estudiante_pertenece_a"
+    CARRERAS ||--o{ PLAN_ESTUDIOS : "posee"
+    MATERIAS ||--o{ PLAN_ESTUDIOS : "se_integra_en"
+    PLAN_ESTUDIOS ||--o{ REQUISITOS : "define_dependencias"
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+    PROFILES {
+        uuid id PK "FK a auth.users"
+        uuid carrera_id FK "Solo para rol ESTUDIANTE"
+        string nombres
+        string apellido_paterno
+        string apellido_materno
+        string email "UNIQUE"
+        enum rol "ADMIN | DOCENTE | ESTUDIANTE"
+        string identificacion_oficial "UNIQUE (CURP/DNI)"
+        date fecha_nacimiento
+        enum genero "M | F | Otro"
+        string telefono_celular
+        string contacto_emergencia_nombre
+        string contacto_emergencia_telefono
+        string direccion_calle_num
+        string direccion_colonia
+        string direccion_cp
+        string direccion_ciudad
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    CARRERAS {
+        uuid id PK
+        string nombre "Ej: Ing. en Software"
+        string codigo_carrera "UNIQUE"
+        int duracion_semestres_minimo
+        int duracion_semestres_maximo
+    }
+
+    MATERIAS {
+        uuid id PK
+        string codigo_materia "UNIQUE"
+        string nombre
+        int creditos_base
+    }
+
+    PLAN_ESTUDIOS {
+        uuid id PK
+        uuid carrera_id FK
+        uuid materia_id FK
+        int semestre_sugerido
+        enum tipo_materia "OBLIGATORIA | OPTATIVA | ELECTIVA"
+        int creditos_especificos "Créditos según este plan"
+    }
+
+    REQUISITOS {
+        uuid id PK
+        uuid plan_estudio_id FK "Materia que se desea cursar"
+        uuid requisito_plan_id FK "Materia previa necesaria"
+        enum tipo_bloqueo "FUERTE | DEBIL"
+    }
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-3mxVrLmCdfF5JNF2
