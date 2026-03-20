@@ -15,8 +15,16 @@ const supabase = createClient(
   }
 )
 
+async function limpiarTablas() {
+  console.log('🧹 Limpiando tablas...')
+  
+  await supabase.from('profiles').delete().neq('id', '0')
+  await supabase.from('carreras').delete().neq('id', '0')
+}
+
 async function seedCarreras() {
   console.log('📚 Creando carreras base...')
+
   const carrerasModo = [
     { nombre: 'Ingeniería en Desarrollo de Software', codigo: 'IDS' },
     { nombre: 'Licenciatura en Administración', codigo: 'LAD' },
@@ -26,66 +34,93 @@ async function seedCarreras() {
   const carrerasCreadas = []
 
   for (const c of carrerasModo) {
-    const { data, error } = await supabase.from('carreras').insert({
-      nombre: c.nombre,
-      codigo_carrera: `${c.codigo}-${faker.number.int({ min: 2024, max: 2026 })}`,
-      duracion_semestres_minimo: 8,
-      duracion_semestres_maximo: 12
-    }).select().single()
+    const { data, error } = await supabase
+      .from('carreras')
+      .upsert({
+        nombre: c.nombre,
+        codigo_carrera: `${c.codigo}-${faker.number.int({ min: 2024, max: 2026 })}`,
+        duracion_semestres_minimo: 8,
+        duracion_semestres_maximo: 12
+      })
+      .select()
+      .single()
 
-    if (error) console.error('❌ Error carrera:', error.message)
-    else carrerasCreadas.push(data)
+    if (error) {
+      console.error('❌ Error carrera:', error.message)
+    } else {
+      carrerasCreadas.push(data)
+    }
   }
+
   return carrerasCreadas
 }
 
-async function seedProfiles(cantidad: number, rol: 'ESTUDIANTE' | 'DOCENTE' | 'ADMIN', carrerasIds: string[]) {
+async function seedProfiles(
+  cantidad: number,
+  rol: 'ESTUDIANTE' | 'DOCENTE' | 'ADMIN',
+  carrerasIds: string[]
+) {
   console.log(`\n🚀 Generando ${cantidad} perfiles para el rol: ${rol}...`)
 
   for (let i = 0; i < cantidad; i++) {
     const email = faker.internet.email().toLowerCase()
-    
-    // 1. Crear en Auth (Bypass con any para evitar error de tipos en script)
-    const { data: authUser, error: authError } = await (supabase.auth as any).admin.createUser({
-      email,
-      password: 'Password123!',
-      email_confirm: true
-    })
 
-    if (authError) {
-      console.error(`❌ Error auth ${email}:`, authError.message)
+    // 1. Crear usuario en Auth
+    const { data: authUser, error: authError } =
+      await (supabase.auth as any).admin.createUser({
+        email,
+        password: 'Password123!',
+        email_confirm: true
+      })
+
+    if (authError || !authUser?.user) {
+      console.error(`❌ Error auth ${email}:`, authError?.message)
       continue
     }
 
-    // 2. Preparar datos del perfil
+    const userId = authUser.user.id
+
+    // 2. Generar apellidos correctamente
+    const apellidos = faker.person.lastName().split(' ')
+
     const profileData: any = {
-      id: authUser.user.id,
+      id: userId,
       nombres: faker.person.firstName(),
-      apellido_paterno: faker.person.lastName(),
-      apellido_materno: faker.person.lastName(),
+      apellido_paterno: apellidos[0],
+      apellido_materno: apellidos[1] || faker.person.lastName(),
       email: email,
       rol: rol,
       identificacion_oficial: faker.string.alphanumeric(10).toUpperCase(),
-      fecha_nacimiento: faker.date.birthdate({ min: 18, max: 50, mode: 'age' }).toISOString().split('T')[0],
+      fecha_nacimiento: faker.date
+        .birthdate({ min: 18, max: 50, mode: 'age' })
+        .toISOString()
+        .split('T')[0],
       genero: faker.helpers.arrayElement(['M', 'F', 'Otro']),
       telefono_celular: faker.phone.number(),
       direccion_ciudad: faker.location.city()
     }
 
-    // Solo asignar carrera si es Estudiante
+    // Solo estudiantes tienen carrera
     if (rol === 'ESTUDIANTE' && carrerasIds.length > 0) {
       profileData.carrera_id = faker.helpers.arrayElement(carrerasIds)
     }
 
-    const { error: profileError } = await supabase.from('profiles').insert(profileData)
+    // 3. Insertar o actualizar perfil (evita duplicados)
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .upsert(profileData)
 
-    if (profileError) console.error(`❌ Error profile ${email}:`, profileError.message)
-    else console.log(`✅ ${rol} creado: ${email}`)
+    if (profileError) {
+      console.error(`❌ Error profile ${email}:`, profileError.message)
+    } else {
+      console.log(`✅ ${rol} creado: ${email}`)
+    }
   }
 }
 
 async function main() {
-  // Limpieza rápida opcional si fuera necesario, pero el reset de la DB ya lo hace
+  await limpiarTablas()
+
   const carreras = await seedCarreras()
   const carrerasIds = carreras.map(c => c.id)
 
