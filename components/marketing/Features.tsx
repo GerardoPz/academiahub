@@ -68,6 +68,11 @@ const features = [
   },
 ];
 
+/**
+ * Renders the "Módulos Principales" marketing section with a header and a responsive grid of feature cards.
+ *
+ * @returns The JSX element for the features section containing the section header and a responsive grid of cards for each feature.
+ */
 export function Features() {
   return (
     <section id="modulos" className="relative py-28 lg:py-36">

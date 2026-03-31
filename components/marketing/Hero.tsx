@@ -3,6 +3,11 @@ import { Button } from "@/components/ui/Button";
 const portada_url =
   "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1920&q=80";
 
+/**
+ * Hero section for the marketing page displaying a centered eyebrow, headline, subtitle, and call-to-action buttons over a faint background image.
+ *
+ * @returns A JSX element containing the hero section with eyebrow text, a two-line headline, a descriptive subtitle, and two CTA buttons ("Ver Demo" and "Ver Documentación").
+ */
 export function Hero() {
   return (
     <section
