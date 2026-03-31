@@ -11,6 +11,11 @@ const navLinks = [
   { label: "Documentación", href: "#docs" },
 ];
 
+/**
+ * Renders the site's responsive navigation bar with brand, desktop navigation links and CTAs, and a collapsible mobile menu.
+ *
+ * @returns The Navbar React element containing the header, navigation links, desktop call-to-action buttons, and an animated mobile toggle/menu.
+ */
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 

@@ -1,5 +1,10 @@
 import { Button } from "@/components/ui/Button";
 
+/**
+ * Renders a centered, responsive call-to-action section in Spanish promoting SIGI.
+ *
+ * @returns The CTA section as a JSX element containing a headline, supporting paragraph, decorative gradient orbs, and two action buttons ("Comenzar Ahora" and "Contactar Ventas").
+ */
 export function CTA() {
   return (
     <section className="relative py-28 lg:py-36">

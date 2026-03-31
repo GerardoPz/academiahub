@@ -6,6 +6,11 @@ const footerLinks = [
   { label: "Contacto Soporte", href: "#" },
 ];
 
+/**
+ * Renders the site footer containing brand information, a list of navigation links, and a system status row.
+ *
+ * @returns The rendered footer element as JSX.
+ */
 export function Footer() {
   return (
     <footer className="bg-surface-container-low py-12">
